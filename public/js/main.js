@@ -13,11 +13,11 @@ const selectionBarOverlay = document.getElementById('selector').firstElementChil
 
 const resultBox = document.getElementById('result-box');
 
-let playing = false;
+let selfChosen = false;
+let selfChoice;
 
-let playerChoice;
-let randomChoice;
 let username;
+let users;
 
 // set username
 const userInput = document.getElementById('user-input');
@@ -26,13 +26,11 @@ const loginOverlay = document.getElementById('login');
 userInput.addEventListener('keyup', e => {
     if (e.key === 'Enter') {
         username = e.target.value;
-        // document.getElementsByClassName('ind__player')[0].innerText = username;
         socket.emit('auth-user', username);
         loginOverlay.style.opacity = '0';
         setTimeout(() => {
             loginOverlay.style.display = 'none';
         }, 200);
-        // Submit username
     }
 });
 
@@ -40,74 +38,51 @@ options.forEach(item => {
     item.addEventListener('click', e => handleItemClick(e));
 });
 
-/**
- * TODO: Add 'start' button
- */
 function handleItemClick(e) {
-    if (playing) return;
-    console.log('Starting game...');
-    playing = true;
-    selectionBarOverlay.classList.add('active');
+    if (selfChosen) return;
+
     const itemName = e.target.id.split('__')[1];
-    playerChoice = itemName;
+    selfChosen = true;
+    selfChoice = itemName;
 
-    const itemDetails = iconData.find(i => i.name == itemName);
+    const minusIcon = iconData.find(i => i.name === 'minus');
+    const itemDetails = iconData.find(i => i.name === itemName);
+    gamePlate.innerHTML = getSelfUserId() === 0 ? itemDetails.path + minusIcon.path
+        : minusIcon.path + itemDetails.path;
 
-    gamePlate.innerHTML = itemDetails.path;
+    selectionBarOverlay.classList.add('active');
 
-    generateRandomChoice();
+    emitSelfChoice();
 }
 
-function generateRandomChoice() {
-    console.log('Generating random choice...');
-    let choiceIndex = Math.floor(Math.random() * (iconData.length - 1));
-
-    gamePlate.innerHTML += iconData[choiceIndex].path;
-    randomChoice = iconData[choiceIndex].name;
-
-    console.log('Random choice: ', randomChoice);
-
-    checkResult();
+function emitSelfChoice() {
+    socket.emit('choice', selfChoice);
 }
 
-function checkResult() {
-    console.log('Checking results...');
-    const result =
-        randomChoice == playerChoice
-            ? 'draw'
-            : winsOver(randomChoice, playerChoice)
-            ? 'loss'
-            : 'win';
+function displayResult(resultObject) {
+    console.log(resultObject);
+    const result = resultObject.result
+    if (result === 'win') confetti.start();
+    resultBox.innerHTML = `<h1><span class='${result}'>${result}</span></h1><p onclick='resetGame()'>Play again!</p>`;
 
-    setTimeout(() => {
-        if (result == 'win') confetti.start();
-        resultBox.innerHTML = `<h1><span class='${result}'>${result}</span></h1><p onclick='resetGame()'>Play again!</p>`;
-    }, 500);
+    gamePlate.innerHTML = ""
+    resultObject.choices.forEach((choice) => {
+        const itemDetails = iconData.find(i => i.name === choice);
+        gamePlate.innerHTML += itemDetails.path
+    })
 }
 
 function resetGame() {
-    playing = false;
+    selfChosen = false;
+    selfChoice = undefined;
+
     confetti.stop();
     selectionBarOverlay.classList.remove('active');
 
-    const minusIcon = iconData.find(i => i.name == 'minus');
+    const minusIcon = iconData.find(i => i.name === 'minus');
 
     gamePlate.innerHTML = `${minusIcon.path} ${minusIcon.path}`;
     resultBox.innerHTML = '';
-}
-
-/**
- * Checks whether the choice of A wins over the choice of B.
- * @param {String} a The choice of A, either "rock", "paper" or "scissors"
- * @param {String} b The choice of B, either "rock", "paper" or "scissors"
- * @returns {Boolean} True if A wins, false otherwise (including a draw)
- */
-function winsOver(a, b) {
-    return (
-        (a == 'paper' && b == 'rock') ||
-        (a == 'rock' && b == 'scissors') ||
-        (a == 'scissors' && b == 'paper')
-    );
 }
 
 // socket io stuff
@@ -129,24 +104,41 @@ socket.on('login', user => {
     wrapper.innerHTML += `<h3>Wazzupp ${user.name}</h3>`;
 });
 
-socket.on('game-full', data => {
-    wrapper.innerHTML += `Whooops: ${data}`;
+socket.on('room-full', data => {
+    wrapper.innerHTML += `The room is already full: ${data}`;
 });
 
-socket.on('room-error', data => {
-    wrapper.innerHTML += `<p>Error: ${data}</p>`;
+socket.on('error', data => {
+    // TODO: fire swal or something
+    wrapper.innerHTML += `Whoooops: ${data}`;
 });
 
-function setUsers(userData) {
-    const usernames = userData.users;
-    usernames.forEach((name, i) => {
+socket.on('disconnect', () => {
+    window.location.reload();
+});
+
+socket.on('result', resultObject => {
+    displayResult(resultObject);
+});
+
+function setUsers(usersData) {
+    users = usersData.users;
+    users.forEach((name, i) => {
         document.getElementsByClassName(`ind__player-${i + 1}`)[0].innerText = name;
     });
 
     const loadingScreen = document.getElementById('loading');
-    if (usernames.length === 2) {
+    if (users.length === 2) {
         loadingScreen.style.display = 'none';
     } else {
         loadingScreen.innerHTML = '<h1>Waiting for second player...</h1>';
     }
+}
+
+function getSelfUserId() {
+    for (let i = 0; i < users.length; i++) {
+        if (users[i] === username)
+            return i;
+    }
+    throw 'Self user isn\'t part of the game?!';
 }
