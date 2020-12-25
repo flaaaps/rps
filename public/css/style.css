@@ -134,7 +134,7 @@ body {
     align-items: center;
 }
 
-#game-plate > svg {
+#game-plate svg {
     /* display: none; */
     animation: scaledReveal 0.4s ease;
 }
