@@ -23,13 +23,13 @@ let users;
 const userInput = document.getElementById('user-input');
 const loginOverlay = document.getElementById('login');
 
-const toastQueue = []
+const toastQueue = [];
 const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
     showConfirmButton: false,
     timer: 3000,
-    timerProgressBar: true
+    timerProgressBar: true,
 });
 
 userInput.addEventListener('keyup', e => {
@@ -54,10 +54,11 @@ function handleItemClick(e) {
     selfChosen = true;
     selfChoice = itemName;
 
-    const minusIcon = iconData.find(i => i.name === 'minus');
     const itemDetails = iconData.find(i => i.name === itemName);
-    gamePlate.innerHTML = getSelfUserId() === 0 ? itemDetails.path + minusIcon.path
-        : minusIcon.path + itemDetails.path;
+
+    getSelfUserId() === 0
+        ? (document.getElementById('player-choice-1').innerHTML = itemDetails.path)
+        : (document.getElementById('player-choice-2').innerHTML = itemDetails.path);
 
     selectionBarOverlay.classList.add('active');
 
@@ -69,16 +70,21 @@ function emitSelfChoice() {
 }
 
 function displayResult(resultObject) {
-    console.log(resultObject);
-    const result = resultObject.result
+    console.log(resultObject, 'ROI');
+    const result = resultObject.result;
     if (result === 'win') confetti.start();
     resultBox.innerHTML = `<h1><span class='${result}'>${result}</span></h1><p onclick='resetGame()'>Play again!</p>`;
 
-    gamePlate.innerHTML = ""
-    resultObject.choices.forEach((choice) => {
-        const itemDetails = iconData.find(i => i.name === choice);
-        gamePlate.innerHTML += itemDetails.path
-    })
+    const selfUserId = getSelfUserId();
+    console.log(selfUserId);
+
+    if (selfUserId == 0) {
+        const itemDetails = iconData.find(i => i.name === resultObject.choices[1]);
+        document.getElementById('player-choice-2').innerHTML = itemDetails.path;
+    } else {
+        const itemDetails = iconData.find(i => i.name === resultObject.choices[0]);
+        document.getElementById('player-choice-1').innerHTML = itemDetails.path;
+    }
 }
 
 function resetGame() {
@@ -90,7 +96,13 @@ function resetGame() {
 
     const minusIcon = iconData.find(i => i.name === 'minus');
 
-    gamePlate.innerHTML = `${minusIcon.path} ${minusIcon.path}`;
+    gamePlate.innerHTML = `
+        <div id="player-choice-1">
+            ${minusIcon.path}
+        </div>
+        <div id="player-choice-2">
+             ${minusIcon.path}
+        </div>`;
     resultBox.innerHTML = '';
 }
 
@@ -99,7 +111,7 @@ socket.on('user-joined', user => {
     if (user.name !== username) {
         queueToast({
             icon: 'info',
-            title: `${user.name} joined the game`
+            title: `${user.name} joined the game`,
         });
     }
 });
@@ -108,32 +120,32 @@ socket.on('login', user => {
     setUsers(user);
     queueToast({
         icon: 'success',
-        title: `Successfully joined game, welcome ${user.name}`
+        title: `Successfully joined game, welcome ${user.name}`,
     });
 });
 
 socket.on('game-full', () => {
     Swal.fire({
-        icon: "error",
+        icon: 'error',
         title: "You're too late",
-        text: "Sorry, but this game is already full! You cannot join anymore..."
-    }).then(() => window.location.href = "https://rps.inceptioncloud.net")
+        text: 'Sorry, but this game is already full! You cannot join anymore...',
+    }).then(() => (window.location.href = 'https://rps.inceptioncloud.net'));
 });
 
 socket.on('game-abort', packet => {
     setUsers(packet);
     queueToast({
         icon: 'warning',
-        title: packet.userLeft + ' left the game'
-    })
-})
+        title: packet.userLeft + ' left the game',
+    });
+});
 
 socket.on('error', data => {
     Swal.fire({
-        icon: "error",
-        title: "Whooops!",
-        text: data
-    }).then(() => window.location.reload())
+        icon: 'error',
+        title: 'Whooops!',
+        text: data,
+    }).then(() => window.location.reload());
 });
 
 socket.on('disconnect', () => {
@@ -146,46 +158,50 @@ socket.on('result', resultObject => {
 
 function setUsers(usersData) {
     users = usersData.users;
+    const userId = getSelfUserId();
     users.forEach((name, i) => {
         document.getElementsByClassName(`ind__player-${i + 1}`)[0].innerText = name;
+        i == userId
+            ? (document.getElementsByClassName(`ind__player-${i + 1}`)[0].style.color =
+                  'orange')
+            : null;
     });
 
     const loadingScreen = document.getElementById('loading');
     if (users.length === 2) {
         loadingScreen.style.display = 'none';
     } else {
-        resetGame()
-        loadingScreen.style.display = "flex";
+        resetGame();
+        loadingScreen.style.display = 'flex';
         loadingScreen.innerHTML = '<h1>Waiting for second player...</h1>';
     }
 }
 
 function getSelfUserId() {
     for (let i = 0; i < users.length; i++) {
-        if (users[i] === username)
-            return i;
+        if (users[i] === username) return i;
     }
-    throw 'Self user isn\'t part of the game?!';
+    throw "Self user isn't part of the game?!";
 }
 
 function queueToast(object) {
     object.willClose = () => {
-        toastQueue.splice(0, 1)
+        toastQueue.splice(0, 1);
         if (toastQueue.length > 0) {
             setTimeout(() => {
-                fireNextToast()
-            }, 100)
+                fireNextToast();
+            }, 100);
         }
-    }
+    };
 
-    toastQueue.push(object)
+    toastQueue.push(object);
 
     if (toastQueue.length === 1) {
-        fireNextToast()
+        fireNextToast();
     }
 }
 
 function fireNextToast() {
-    const next = toastQueue[toastQueue.length - 1]
-    Toast.fire(next)
+    const next = toastQueue[toastQueue.length - 1];
+    Toast.fire(next);
 }
