@@ -23,6 +23,15 @@ let users;
 const userInput = document.getElementById('user-input');
 const loginOverlay = document.getElementById('login');
 
+const toastQueue = []
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true
+});
+
 userInput.addEventListener('keyup', e => {
     if (e.key === 'Enter') {
         username = e.target.value;
@@ -85,32 +94,38 @@ function resetGame() {
     resultBox.innerHTML = '';
 }
 
-// socket io stuff
-
-// loginForm.addEventListener('keyup', e => {
-//     if (e.keyCode == 13) {
-//         socket.emit('add user', usernameInput.value);
-//         usernameInput.value = '';
-//     }
-// });
-
 socket.on('user-joined', user => {
     setUsers(user);
-    wrapper.innerHTML += `<h3>${user.name} joined the game</h3>`;
+    if (user.name !== username) {
+        queueToast({
+            icon: 'info',
+            title: `${user.name} joined the game`
+        });
+    }
 });
 
 socket.on('login', user => {
     setUsers(user);
-    wrapper.innerHTML += `<h3>Wazzupp ${user.name}</h3>`;
+    queueToast({
+        icon: 'success',
+        title: `Successfully joined game, welcome ${user.name}`
+    });
 });
 
-socket.on('room-full', data => {
-    wrapper.innerHTML += `The room is already full: ${data}`;
+socket.on('game-full', () => {
+    Swal.fire({
+        icon: "error",
+        title: "You're too late",
+        text: "Sorry, but this game is already full! You cannot join anymore..."
+    }).then(() => window.location.href = "https://rps.inceptioncloud.net")
 });
 
 socket.on('error', data => {
-    // TODO: fire swal or something
-    wrapper.innerHTML += `Whoooops: ${data}`;
+    Swal.fire({
+        icon: "error",
+        title: "Whooops!",
+        text: data
+    }).then(() => window.location.reload())
 });
 
 socket.on('disconnect', () => {
@@ -141,4 +156,26 @@ function getSelfUserId() {
             return i;
     }
     throw 'Self user isn\'t part of the game?!';
+}
+
+function queueToast(object) {
+    object.willClose = () => {
+        toastQueue.splice(0, 1)
+        if (toastQueue.length > 0) {
+            setTimeout(() => {
+                fireNextToast()
+            }, 100)
+        }
+    }
+
+    toastQueue.push(object)
+
+    if (toastQueue.length === 1) {
+        fireNextToast()
+    }
+}
+
+function fireNextToast() {
+    const next = toastQueue[toastQueue.length - 1]
+    Toast.fire(next)
 }

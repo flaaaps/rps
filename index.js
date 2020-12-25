@@ -49,7 +49,7 @@ io.on('connection', async socket => {
             console.log('> Object:', game);
             if (game.userCount >= 2) {
                 console.log('> Game is already full');
-                socket.emit('game-full', 'This game is already full!');
+                socket.emit('game-full');
                 return;
             }
         } else {
@@ -67,13 +67,13 @@ io.on('connection', async socket => {
 
             if (game.users.some(user => user.username.toLowerCase() === username)) {
                 console.log('> User with name ' + username + ' already exists in this game');
-                socket.emit('error', '');
+                socket.emit('error', 'This username is already taken, please select another one!');
                 return;
             }
 
             if (game.userCount >= 2) {
                 console.log('> Cannot auth user, game is full');
-                socket.emit('error', 'This game is already full!');
+                socket.emit('game-full');
                 return;
             }
 
@@ -100,7 +100,7 @@ io.on('connection', async socket => {
             });
         });
     } else {
-        socket.emit('error', 'Missing room id');
+        socket.emit('error', 'Missing room d');
     }
 
     socket.on('ping', cb => {
