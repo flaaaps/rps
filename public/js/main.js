@@ -28,7 +28,7 @@ const Toast = Swal.mixin({
     toast: true,
     position: 'top-end',
     showConfirmButton: false,
-    timer: 3000,
+    timer: 2500,
     timerProgressBar: true,
 });
 
@@ -159,12 +159,17 @@ socket.on('result', resultObject => {
 function setUsers(usersData) {
     users = usersData.users;
     const userId = getSelfUserId();
+    console.log(userId, 'USER ID');
+
+    document.getElementsByClassName(`ind__player-2`)[0].style.color =
+        'rgb(236, 236, 236)';
+    document.getElementsByClassName(`ind__player-1`)[0].style.color =
+        'rgb(236, 236, 236)';
     users.forEach((name, i) => {
         document.getElementsByClassName(`ind__player-${i + 1}`)[0].innerText = name;
-        i == userId
-            ? (document.getElementsByClassName(`ind__player-${i + 1}`)[0].style.color =
-                  'orange')
-            : null;
+        i == userId &&
+            (document.getElementsByClassName(`ind__player-${i + 1}`)[0].style.color =
+                'orange');
     });
 
     const loadingScreen = document.getElementById('loading');
