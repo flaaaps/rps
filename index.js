@@ -89,27 +89,37 @@ io.on('connection', async socket => {
 
             socket.on('choice', choice => {
                 if (!verifyChoice(choice)) {
+                    console.log(`> Invalid choice of ${username}: ${choice}`);
                     socket.emit('error', 'Invalid choice');
                     return;
                 }
 
-                console.log('> ' + username + ' chose ' + choice);
+                if (userObject.choice) {
+                    console.log(`> ${username} tried to change his choice`);
+                    socket.emit('error', 'Choice already registered')
+                    return
+                }
+
+                console.log(`> ${username} chose ${choice}`);
                 userObject.choice = choice;
 
                 checkForGameEnd(game);
+            });
+
+            socket.on('disconnect', () => {
+                console.log('> ' + username + ' left the game');
+                game.users.splice(game.users.indexOf(userObject), 1);
+                game.userCount--;
+
+                game.users.forEach(user => {
+                    user.socket.emit('game-abort', { userLeft: username, users: game.users.map(it => it.username) });
+                    delete user.choice;
+                });
             });
         });
     } else {
         socket.emit('error', 'Missing room d');
     }
-
-    socket.on('ping', cb => {
-        if (typeof cb === 'function') cb();
-    });
-
-    // socket.on('disconnecting', () => {
-    // 	console.log(socket.rooms, 'ROOMS');
-    // });
 });
 
 function checkForGameEnd(game) {
@@ -118,18 +128,18 @@ function checkForGameEnd(game) {
     if (allUsersChosen) {
         console.log('> All users have chosen, game is ending...');
 
-        const result = getResult(game)
-        const choices = game.users.map(user => user.choice)
+        const result = getResult(game);
+        const choices = game.users.map(user => user.choice);
         game.users.forEach((user, index) => {
             if (result === 0) {
-                user.socket.emit("result", { result: "draw", choices })
+                user.socket.emit('result', { result: 'draw', choices });
             } else if (index === result - 1) {
-                user.socket.emit("result", { result: "win", choices })
+                user.socket.emit('result', { result: 'win', choices });
             } else {
-                user.socket.emit("result", { result: "loss", choices })
+                user.socket.emit('result', { result: 'loss', choices });
             }
-            delete user.choice
-        })
+            delete user.choice;
+        });
     }
 }
 
@@ -146,7 +156,7 @@ function getResult(game) {
 
     return choiceUser1 === choiceUser2 ? 0
         : winsOver(choiceUser1, choiceUser2) ? 1
-            : 2
+            : 2;
 }
 
 /**

@@ -120,6 +120,14 @@ socket.on('game-full', () => {
     }).then(() => window.location.href = "https://rps.inceptioncloud.net")
 });
 
+socket.on('game-abort', packet => {
+    setUsers(packet);
+    queueToast({
+        icon: 'warning',
+        title: packet.userLeft + ' left the game'
+    })
+})
+
 socket.on('error', data => {
     Swal.fire({
         icon: "error",
@@ -146,6 +154,8 @@ function setUsers(usersData) {
     if (users.length === 2) {
         loadingScreen.style.display = 'none';
     } else {
+        resetGame()
+        loadingScreen.style.display = "flex";
         loadingScreen.innerHTML = '<h1>Waiting for second player...</h1>';
     }
 }
