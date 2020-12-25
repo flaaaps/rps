@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>RPS | The game</title>
+        <link rel="stylesheet" href="./css/style.css" />
+    </head>
+
+    <body>
+        <div id="wrapper"></div>
+        <div id="loading"></div>
+        <div id="login">
+            <h1>What do you want to be called?</h1>
+            <input
+                type="text"
+                maxlength="16"
+                placeholder="rick23"
+                autocomplete="off"
+                id="user-input"
+            />
+        </div>
+        <div class="player-indicator">
+            <h1 class="ind__player-1">YOU</h1>
+            <h1 class="ind__player-2">COMPUTER</h1>
+        </div>
+        <div id="game-plate">
+            <i class="fas fa-minus"></i>
+            <i class="fas fa-minus"></i>
+        </div>
+        <div id="result-box"></div>
+        <div id="selector">
+            <div class="overlay"></div>
+            <div id="item__rock" class="item">
+                <i class="far fa-hand-rock"></i>
+            </div>
+            <div id="item__paper" class="item">
+                <i class="far fa-hand-paper"></i>
+            </div>
+            <div id="item__scissors" class="item">
+                <i class="far fa-hand-scissors"></i>
+            </div>
+        </div>
+
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="./js/confetti.min.js"></script>
+        <script src="./js/main.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/js/all.min.js"></script>
+    </body>
+</html>
