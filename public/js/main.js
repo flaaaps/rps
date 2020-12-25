@@ -27,7 +27,7 @@ userInput.addEventListener('keyup', e => {
     if (e.key === 'Enter') {
         username = e.target.value;
         // document.getElementsByClassName('ind__player')[0].innerText = username;
-        socket.emit('add user', username);
+        socket.emit('auth-user', username);
         loginOverlay.style.opacity = '0';
         setTimeout(() => {
             loginOverlay.style.display = 'none';
@@ -81,7 +81,7 @@ function checkResult() {
 
     setTimeout(() => {
         if (result == 'win') confetti.start();
-        resultBox.innerHTML = `<h1><span class="${result}">${result}</span></h1><p onclick="resetGame()">Play again!</p>`;
+        resultBox.innerHTML = `<h1><span class='${result}'>${result}</span></h1><p onclick='resetGame()'>Play again!</p>`;
     }, 500);
 }
 
@@ -119,18 +119,17 @@ function winsOver(a, b) {
 //     }
 // });
 
-socket.on('user joined', user => {
-    console.log('A USER JOINED', user);
+socket.on('user-joined', user => {
     setUsers(user);
     wrapper.innerHTML += `<h3>${user.name} joined the game</h3>`;
 });
 
 socket.on('login', user => {
     setUsers(user);
-    wrapper.innerHTML += `<h3>Wazzupp ${user.name}, ${user.count}</h3>`;
+    wrapper.innerHTML += `<h3>Wazzupp ${user.name}</h3>`;
 });
 
-socket.on('game full', data => {
+socket.on('game-full', data => {
     wrapper.innerHTML += `Whooops: ${data}`;
 });
 
@@ -140,12 +139,12 @@ socket.on('room-error', data => {
 
 function setUsers(userData) {
     const usernames = userData.users;
-    usernames.map((name, i) => {
-        console.log(name, i);
+    usernames.forEach((name, i) => {
         document.getElementsByClassName(`ind__player-${i + 1}`)[0].innerText = name;
     });
+
     const loadingScreen = document.getElementById('loading');
-    if (usernames.length == 2) {
+    if (usernames.length === 2) {
         loadingScreen.style.display = 'none';
     } else {
         loadingScreen.innerHTML = '<h1>Waiting for second player...</h1>';

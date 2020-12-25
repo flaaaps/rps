@@ -23,7 +23,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/game', (req, res) => {
-	console.log('Request');
 	const gameId = req.query.id;
 	if (!gameId) return res.send({ success: false, error: 'Please include a game id' });
 	res.render('game.html');
@@ -33,39 +32,55 @@ app.get('/game', (req, res) => {
 const games = [];
 
 io.on('connection', async socket => {
-	console.log('Connection established');
-	let addedUser = false;
+	let userAlreadyAuthenticated = false;
 	const connectionUrl = socket.handshake.headers.referer;
 	const parsedUrl = url.parse(connectionUrl);
+
+	console.log("== New connection established ==")
+	console.log("> Connection URL: " + connectionUrl)
+
 	if (parsedUrl.query) {
 		const params = getUrlParams(parsedUrl.query);
 		const gameId = params.id;
-		console.log(games);
 
-		if (!gameExists(gameId)) {
+		if (gameExists(gameId)) {
+			console.log("> Joining game with id " + gameId)
+			const game = getGameById(gameId)
+			console.log("> Object:", game)
+			if (game.userCount >= 2) {
+				console.log("> Game is already full")
+				socket.emit("game-full", "This game is already full!")
+				return
+			}
+		} else {
 			// Create/join room
+			console.log("> Creating new game with id " + gameId)
 			await socket.join(gameId);
 			games.push({ gameId, userCount: 0, users: [] });
 		}
 
-		socket.on('add user', username => {
-			console.log('ADDING USER');
-			if (addedUser) return;
-			const game = games.filter(game => game.gameId == gameId)[0];
-			if (game.users >= 2)
-				return socket.emit('game full', 'This game does already have two players');
-			game.userCount = game.userCount + 1;
-			addedUser = true;
-			game.users.push(username);
+		socket.on('auth-user', username => {
+			if (userAlreadyAuthenticated) return;
+			console.log('> Authenticating user ' + username + ' in game ' + gameId);
 
-			socket.emit('login', { name: username, count: game.userCount, users: game.users });
-			socket
-				.to(gameId)
-				.emit('user joined', { name: username, count: game.userCount, users: game.users });
-			console.log('GAMES', games);
+			const game = getGameById(gameId)
+			if (game.userCount >= 2) {
+				console.log("> Cannot auth user, game is full")
+				socket.emit("game-full", "This game is already full!")
+				return
+			}
+
+			userAlreadyAuthenticated = true;
+			game.userCount = game.userCount + 1;
+			game.users.push({ username, socket: socket });
+
+			socket.emit('login', { name: username, users: game.users.map(it => it.username) });
+			game.users.forEach(user =>
+				user.socket.emit('user-joined', { name: username, users: game.users.map(it => it.username) })
+			)
 		});
 	} else {
-		io.emit('room-error', 'Missing room id');
+		socket.emit('room-error', 'Missing room id');
 	}
 
 	socket.on('ping', cb => {
@@ -78,8 +93,11 @@ io.on('connection', async socket => {
 });
 
 function gameExists(gameId) {
-	const existingGame = games.find(game => game.gameId == gameId);
-	return existingGame ? true : false;
+	return !!getGameById(gameId);
+}
+
+function getGameById(gameId) {
+	return games.find(game => game.gameId === gameId);
 }
 
 function getUrlParams(query) {
@@ -88,7 +106,7 @@ function getUrlParams(query) {
 	const obj = {};
 	paramSplit.map(param => {
 		const splittedParam = param.split('=');
-		if (splittedParam[0] != '' && splittedParam[1] != '') {
+		if (splittedParam[0] !== '' && splittedParam[1] !== '') {
 			obj[splittedParam[0]] = splittedParam[1];
 		}
 	});
