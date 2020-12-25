@@ -260,3 +260,8 @@ body {
         animation: fadeUp 0.5s ease;
     }
 }
+
+/* swal adjustments */
+.swal2-popup.swal2-toast {
+    box-shadow: none !important;
+}
