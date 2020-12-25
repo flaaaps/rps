@@ -1,22 +1,22 @@
 {
-  "name": "rps",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "start": "node .",
-    "dev": "nodemon ."
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "ejs": "^3.1.5",
-    "express": "^4.17.1",
-    "socket.io": "^3.0.4"
-  },
-  "devDependencies": {
-    "kill-port": "^1.6.1",
-    "nodemon": "^2.0.6"
-  }
+    "name": "rps",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "start": "node .",
+        "dev": "nodemon ."
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "ejs": "^3.1.5",
+        "express": "^4.17.1",
+        "socket.io": "^3.0.4"
+    },
+    "devDependencies": {
+        "kill-port": "^1.6.1",
+        "nodemon": "^2.0.6"
+    }
 }

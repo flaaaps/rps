@@ -66,8 +66,13 @@ io.on('connection', async socket => {
             const game = getGameById(gameId);
 
             if (game.users.some(user => user.username.toLowerCase() === username)) {
-                console.log('> User with name ' + username + ' already exists in this game');
-                socket.emit('error', 'This username is already taken, please select another one!');
+                console.log(
+                    '> User with name ' + username + ' already exists in this game'
+                );
+                socket.emit(
+                    'error',
+                    'This username is already taken, please select another one!'
+                );
                 return;
             }
 
@@ -82,9 +87,15 @@ io.on('connection', async socket => {
             game.userCount = game.userCount + 1;
             game.users.push(userObject);
 
-            socket.emit('login', { name: username, users: game.users.map(it => it.username) });
+            socket.emit('login', {
+                name: username,
+                users: game.users.map(it => it.username),
+            });
             game.users.forEach(user =>
-                user.socket.emit('user-joined', { name: username, users: game.users.map(it => it.username) }),
+                user.socket.emit('user-joined', {
+                    name: username,
+                    users: game.users.map(it => it.username),
+                })
             );
 
             socket.on('choice', choice => {
@@ -96,8 +107,8 @@ io.on('connection', async socket => {
 
                 if (userObject.choice) {
                     console.log(`> ${username} tried to change his choice`);
-                    socket.emit('error', 'Choice already registered')
-                    return
+                    socket.emit('error', 'Choice already registered');
+                    return;
                 }
 
                 console.log(`> ${username} chose ${choice}`);
@@ -112,7 +123,10 @@ io.on('connection', async socket => {
                 game.userCount--;
 
                 game.users.forEach(user => {
-                    user.socket.emit('game-abort', { userLeft: username, users: game.users.map(it => it.username) });
+                    user.socket.emit('game-abort', {
+                        userLeft: username,
+                        users: game.users.map(it => it.username),
+                    });
                     delete user.choice;
                 });
             });
@@ -154,9 +168,7 @@ function getResult(game) {
     const choiceUser1 = users[0].choice;
     const choiceUser2 = users[1].choice;
 
-    return choiceUser1 === choiceUser2 ? 0
-        : winsOver(choiceUser1, choiceUser2) ? 1
-            : 2;
+    return choiceUser1 === choiceUser2 ? 0 : winsOver(choiceUser1, choiceUser2) ? 1 : 2;
 }
 
 /**
