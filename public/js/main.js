@@ -91,10 +91,7 @@ function displayResult(resultObject) {
 
 function updateGameHistory() {
     const gameHistoryContentWrapper = document.querySelector('.game-history__content');
-    console.log(users, 'USERS');
     const game = gameHistory[gameHistory.length - 1];
-    console.log(game, 'GAME');
-    console.log(getSelfUserId());
     gameHistoryContentWrapper.innerHTML += `
             <div class="match ${game.result}">
                 <span class="fpc ${getSelfUserId() === 0 && 'highlighted'}">
@@ -194,7 +191,6 @@ socket.on('disconnect', () => {
 });
 
 socket.on('result', resultObject => {
-    console.log(resultObject);
     gameHistory.push(resultObject);
     displayResult(resultObject);
     updateGameHistory();
