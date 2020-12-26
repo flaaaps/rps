@@ -2,18 +2,25 @@
 
 :root {
     --text-color: rgb(236, 236, 236);
-    --text-color-light: rgb(180, 180, 180);
+    --text-color-light: rgb(192, 192, 192);
 }
 
 * {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
 body {
     background-color: #333;
     box-sizing: border-box;
     font-family: Asap;
+}
+
+div > svg,
+p > svg,
+span > svg {
+    pointer-events: none;
 }
 
 #login,
@@ -30,6 +37,8 @@ body {
 
     z-index: 999;
     transition: 0.2s ease;
+    /* remove for production */
+    /* display: none; */
 }
 
 #login h1,
@@ -38,6 +47,92 @@ body {
     margin-bottom: 2rem;
     font-size: 3.5rem;
     text-shadow: 0px 0px 5px #ecf0f1;
+}
+
+#game-history {
+    background-color: #333;
+    position: fixed;
+    width: 32%;
+    height: 100vh;
+    transform: translateX(-100%);
+    z-index: 9;
+
+    transition: 0.2s ease;
+}
+
+#game-history.active {
+    transform: translateX(0%);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#game-history .btn-open {
+    text-align: right;
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 0 50px;
+    padding: 15px;
+    cursor: pointer;
+    color: var(--text-color);
+
+    transition: 0.2s ease;
+}
+
+#game-history.active .btn-open {
+    margin: 0 0 0 0 !important;
+}
+
+#game-history .btn-open h1 {
+    user-select: none;
+    font-size: 22px;
+}
+
+#game-history .btn-open .fa-history {
+    font-size: 30px;
+    margin-left: 15px;
+}
+
+.game-history__content {
+    height: 95vh;
+    overflow: auto;
+    border-top: 2px solid var(--text-color);
+}
+
+.game-history__content .match {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-color-light);
+    font-size: 25px;
+    border-bottom: 2px solid white;
+    padding: 25px 65px;
+    margin-left: -25px;
+}
+
+.game-history__content .match .result {
+    font-weight: 600;
+}
+
+.game-history__content .match .name {
+    margin-left: 10px;
+}
+
+.game-history__content .match.win .fpc.highlighted,
+.game-history__content .match.win .spc.highlighted {
+    color: orange;
+}
+
+.game-history__content .match.loss .fpc.highlighted,
+.game-history__content .match.loss .spc.highlighted {
+    color: #c0392b;
+}
+
+.game-history__content .match.win .result {
+    color: orange;
+}
+.game-history__content .match.loss .result {
+    color: #c0392b;
 }
 
 #user-input {

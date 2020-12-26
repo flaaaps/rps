@@ -19,6 +19,8 @@ let selfChoice;
 let username;
 let users;
 
+let gameHistory = [];
+
 // set username
 const userInput = document.getElementById('user-input');
 const loginOverlay = document.getElementById('login');
@@ -70,7 +72,7 @@ function emitSelfChoice() {
 }
 
 function displayResult(resultObject) {
-    console.log(resultObject, 'ROI');
+    console.log(gameHistory, 'GH');
     const result = resultObject.result;
     if (result === 'win') confetti.start();
     resultBox.innerHTML = `<h1><span class='${result}'>${result}</span></h1><p onclick='resetGame()'>Play again!</p>`;
@@ -85,6 +87,31 @@ function displayResult(resultObject) {
         const itemDetails = iconData.find(i => i.name === resultObject.choices[0]);
         document.getElementById('player-choice-1').innerHTML = itemDetails.path;
     }
+}
+
+function updateGameHistory() {
+    const gameHistoryContentWrapper = document.querySelector('.game-history__content');
+    console.log(users, 'USERS');
+    const game = gameHistory[gameHistory.length - 1];
+    console.log(game, 'GAME');
+    console.log(getSelfUserId());
+    gameHistoryContentWrapper.innerHTML += `
+            <div class="match ${game.result}">
+                <span class="fpc ${getSelfUserId() === 0 && 'highlighted'}">
+                    ${getChoiceDetails(game.choices[0]).path}
+                    <span class="name">${users[0]}</span>
+                </span>
+                <span class="result">vs</span>
+                <span class="spc ${getSelfUserId() === 1 && 'highlighted'}">
+                    ${getChoiceDetails(game.choices[1]).path}
+                    <span class="name">${users[1]}</span>
+                </span>
+            </div>
+            `;
+}
+
+function getChoiceDetails(choice) {
+    return iconData.find(i => i.name === choice);
 }
 
 function resetGame() {
@@ -105,6 +132,20 @@ function resetGame() {
         </div>`;
     resultBox.innerHTML = '';
 }
+
+/* Handle game history */
+const historyToggle = document.querySelector('#game-history .btn-open');
+const gameHistoryContainer = document.getElementById('game-history');
+
+historyToggle.addEventListener('click', e => {
+    console.log('Clicked toggle');
+    gameHistoryContainer.classList.toggle('active');
+});
+
+window.addEventListener('click', e => {
+    console.log(e.target);
+    if (e.target.id == 'game-plate') gameHistoryContainer.classList.remove('active');
+});
 
 socket.on('user-joined', user => {
     setUsers(user);
@@ -153,7 +194,10 @@ socket.on('disconnect', () => {
 });
 
 socket.on('result', resultObject => {
+    console.log(resultObject);
+    gameHistory.push(resultObject);
     displayResult(resultObject);
+    updateGameHistory();
 });
 
 function setUsers(usersData) {
