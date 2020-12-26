@@ -92,6 +92,7 @@ function displayResult(resultObject) {
 function updateGameHistory() {
     const gameHistoryContentWrapper = document.querySelector('.game-history__content');
     const game = gameHistory[gameHistory.length - 1];
+    if (gameHistory.length == 1) gameHistoryContentWrapper.innerHTML = '';
     gameHistoryContentWrapper.innerHTML += `
             <div class="match ${game.result}">
                 <span class="fpc ${getSelfUserId() === 0 && 'highlighted'}">

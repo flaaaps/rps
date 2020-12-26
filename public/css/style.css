@@ -100,6 +100,12 @@ span > svg {
     border-top: 2px solid var(--text-color);
 }
 
+.game-history__content h2 {
+    color: var(--text-color-light);
+    margin-top: 15px;
+    padding: 15px;
+}
+
 .game-history__content .match {
     display: flex;
     justify-content: space-between;
